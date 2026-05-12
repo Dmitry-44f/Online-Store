@@ -1,0 +1,372 @@
+openapi: 3.0.3
+info:
+  title: Интернет-магазин смартфонов
+  description: REST API для управления смартфонами, корзиной и заказами
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local server
+
+tags:
+  - name: ProductController
+    description: Работа с товарами
+  - name: BasketController
+    description: Работа с корзиной
+  - name: OrderController
+    description: Работа с заказами
+
+paths:
+  /products:
+    post:
+      tags:
+        - ProductController
+      summary: Создать товар
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+      responses:
+        '200':
+          description: Товар создан
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  productId:
+                    type: integer
+                    description: ID созданного товара
+                    example: 17
+
+  /products/{productId}:
+    get:
+      tags:
+        - ProductController
+      summary: Получить товар по id
+      operationId: getProductById
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          description: ID товара
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Товар найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Товар не найден
+    delete:
+      tags:
+        - ProductController
+      summary: Удалить товар по id
+      operationId: deleteProductById
+
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          description: ID товара
+          schema:
+            type: integer
+            example: 1
+
+      responses:
+        '204':
+          description: Товар удалён
+
+        '404':
+          description: Товар не найден
+
+  /users/{userId}/basket:
+    get:
+      tags:
+        - BasketController
+      summary: Получить корзину по id пользователя
+      operationId: getUserBasket
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Корзина получена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Basket'
+        '404':
+          description: Корзина не найдена
+
+  /users/{userId}/basket/items:
+    post:
+      tags:
+        - BasketController
+      summary: Добавить товар в корзину
+      operationId: addItemToBasket
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+        
+        - name: productId
+          in: query
+          required: true
+          schema:
+            type: integer
+            example: 1
+        
+        - name: quantity
+          in: query
+          required: true
+          schema:
+            type: integer
+            example: 2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BasketItem'
+
+      responses:
+        '200':
+          description: Товар добавлен в корзину
+
+  /users/{userId}/basket/items/{productId}:
+    delete:
+      tags:
+        - BasketController
+      summary: Удалить товар из корзины
+      operationId: removeItemFromBasket
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+        
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+
+      responses:
+        '204':
+          description: Товар удалён
+        '404':
+          description: Товар или корзина не найдены
+
+  /users/{userId}/orders:
+    post:
+      tags:
+        - OrderController
+      summary: Создать заказ
+      description: Создаёт заказ на основе корзины пользователя
+      operationId: createOrder
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+
+      responses:
+        '201':
+          description: Заказ создан
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ordertId:
+                    type: integer
+                    description: ID созданного заказа
+                    example: 12
+
+  /orders/{orderId}:
+    get:
+      tags:
+        - OrderController
+      summary: Получить заказ по id
+      operationId: getOrderById
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+
+      responses:
+        '200':
+          description: Заказ найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Заказ не найден
+
+    delete:
+      tags:
+        - OrderController
+      summary: Удалить заказ по id
+      operationId: deleteOrderById
+
+      parameters: 
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 100
+
+      responses: 
+        '204':
+          description: Заказ удален
+
+        '404':
+          description: Заказ не найден
+
+components:
+  schemas:
+    Product:
+      type: object
+      description: Смартфон
+      properties:
+        productId:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: iPhone 15
+        price:
+          type: number
+          format: double
+          example: 99990
+        storage:
+          type: integer
+          example: 256
+        color:
+          type: string
+          example: Black
+        inStock:
+          type: boolean
+          example: true
+      required:
+        - productId
+        - name
+        - price
+        - storage
+        - color
+        - inStock
+
+    ProductCreate:
+      type: object
+      description: Данные для создания смартфона
+      properties:
+        name:
+          type: string
+          example: iPhone 15
+
+        price:
+          type: number
+          format: double
+          example: 99990
+
+        storage:
+          type: integer
+          example: 256
+
+        color:
+          type: string
+          example: Black
+
+        inStock:
+          type: boolean
+          example: true
+
+      required:
+        - name
+        - price
+        - storage
+        - color
+        - inStock
+
+    Basket:
+      type: object
+      properties:
+        basketId:
+          type: integer
+          example: 1
+
+        userId:
+          type: integer
+          example: 10
+
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BasketItem'
+
+        totalPrice:
+          type: number
+          format: double
+          example: 169980
+
+    BasketItem:
+      type: object
+      description: Товар в корзине
+      properties:
+        product:
+          $ref: '#/components/schemas/Product'
+
+        quantity:
+          type: integer
+          example: 2
+
+      required:
+        - productId
+        - quantity
+
+    Order:
+      type: object
+      description: Заказ
+      properties:
+        orderId:
+          type: integer
+          example: 100
+
+        basket:
+          $ref: '#/components/schemas/Basket'
+
+        status:
+          type: string
+          enum:
+            - CREATED
+            - PAID
+            - SHIPPED
+            - DELIVERED
+            - CANCELED
+          example: CREATED
+
+      required:
+        - id
+        - basket
+        - status
